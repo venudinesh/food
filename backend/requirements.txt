@@ -1,0 +1,27 @@
+Flask
+Flask-SQLAlchemy
+Flask-JWT-Extended
+Flask-Login
+requests
+geopy
+gunicorn
+
+# ML and Data Analysis
+pandas
+numpy
+scikit-learn
+nltk
+textblob
+
+# API integrations
+googlemaps
+stripe
+yelpapi
+
+# Database
+psycopg2-binary
+Flask-Migrate
+Flask-Script
+
+# Additional utilities
+python-dotenv

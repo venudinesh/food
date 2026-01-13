@@ -1,0 +1,38 @@
+make a btech computer science engineering final year project with frontend, backend, ml model of Hybrid Recommendation System using Collaborative Filtering + Content-Based Filtering (CBF + CF) with no mockdata or testdata but only real data.
+now I need all real data
+ill say how to make this project work
+1. make this project go online and connect to the internet
+2. gather location info of the user by permissions
+3. show restaurants near the user
+4. add respective menu items of the restaurants and their prices [gather information from the internet, only use real data, Dont generate mock data or test data, only real data and gather any data from the internet]
+5. user needs to select the item needed
+6. user has a choice to add the item directly or change the ingredients on the respective item
+7. the ml model should show recommendations accordingly
+8. make sure the order that respective item as it is or any if any changes done, make changes and order that changed item
+9. payment option and pay [payment options are cards, UPI, cash on delivery]
+10. add a live telecast option to show that the item being prepared via live telecast between the restaurant chef and the user and make it optional not mandatory
+11. track the item via delivery
+12. item delivered to user
+13. feedback to restaurant
+14. feedback to app
+
+add these too to make a real website
+
+API Keys: Add real Google Places API and Google Maps API keys
+Database: Migrate to PostgreSQL for production
+Authentication: Implement user registration and login UI
+Payment: Integrate Stripe or PayPal for real payments
+Real Data: Connect to actual restaurant APIs (Yelp, DoorDash, etc.)
+Notifications: Add SMS/email notifications for order updates
+
+STRICTLY NO MOCKDATA OR TEST DATA SHOULD BE USED, ONLY REAL DATA
+TRAIN THE ML MODEL WITH REAL DATA TOO
+
+install requirements if needed, fix all problems, errors, bugs etc
+
+MAKE THIS PROJECT DEPLOYMENT READY
+
+skip steps if already done but double check everything
+
+do not create any documentation or readme or whatever
+only focus on the project purely
