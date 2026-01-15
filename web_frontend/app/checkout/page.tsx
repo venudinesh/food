@@ -15,8 +15,6 @@ export default function Checkout() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
 
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -60,119 +58,18 @@ export default function Checkout() {
       }
 
       const createdOrderId = response.order_id;
+      const finalTotal = total + 2.99 + total * 0.08; // Include delivery fee and tax
 
-      // Process payment based on method
-      let paymentSuccess = false;
+      // Redirect to payment page with order details
+      router.push(`/payment?order_id=${createdOrderId}&total=${finalTotal}&payment_method=${paymentMethod}`);
 
-      if (paymentMethod === 'card') {
-        paymentSuccess = await processStripePayment(createdOrderId, total + 2.99 + total * 0.08);
-      } else if (paymentMethod === 'cod') {
-        paymentSuccess = await processCodPayment(createdOrderId, total + 2.99 + total * 0.08);
-      } else if (paymentMethod === 'upi') {
-        if (!upiId.trim()) {
-          setError('Please enter your UPI ID');
-          return;
-        }
-        paymentSuccess = await processUpiPayment(createdOrderId, total + 2.99 + total * 0.08, upiId);
-      }
-
-      if (paymentSuccess) {
-        setOrderId(createdOrderId);
-        setSuccess(true);
-        clearCart();
-      } else {
-        setError('Payment failed. Please try again.');
-      }
     } catch (err) {
-      setError('Failed to place order. Please check your connection and try again.');
+      setError('Failed to create order. Please check your connection and try again.');
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
-
-  const processStripePayment = async (orderId: string, amount: number): Promise<boolean> => {
-    try {
-      // For now, simulate successful payment since Stripe integration is incomplete
-      // In a real implementation, this would use proper Stripe Elements
-      console.log('Processing card payment for order:', orderId, 'amount:', amount);
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Simulate successful payment
-      return true;
-    } catch (err) {
-      console.error('Card payment simulation error:', err);
-      setError('Card payment failed. Please try again.');
-      return false;
-    }
-  };
-
-  const processCodPayment = async (orderId: string, amount: number): Promise<boolean> => {
-    try {
-      const response = await apiClient.post('/api/payments/process-cod', {
-        order_id: orderId,
-        amount
-      });
-      return response.success;
-    } catch (err) {
-      console.error('COD payment error:', err);
-      return false;
-    }
-  };
-
-  const processUpiPayment = async (orderId: string, amount: number, upiId: string): Promise<boolean> => {
-    try {
-      const response = await apiClient.post('/api/payments/process-upi', {
-        order_id: orderId,
-        amount,
-        upi_id: upiId
-      });
-      return response.success;
-    } catch (err) {
-      console.error('UPI payment error:', err);
-      return false;
-    }
-  };
-
-  if (success && orderId) {
-    return (
-      <div className="bg-gradient-to-b from-green-50 via-white to-slate-50 min-h-screen">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 py-12">
-          <div className="text-center">
-            <div className="text-8xl mb-6">🎉</div>
-            <h1 className="text-4xl font-bold text-green-800 mb-4">Order Placed Successfully!</h1>
-            <p className="text-xl text-gray-600 mb-8">Your delicious food is on its way</p>
-
-            <div className="bg-white rounded-xl shadow-lg p-8 mb-8 max-w-md mx-auto">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Order Details</h2>
-              <div className="text-left space-y-2">
-                <p><span className="font-semibold">Order ID:</span> #{orderId}</p>
-                <p><span className="font-semibold">Status:</span> <span className="text-orange-600">Preparing</span></p>
-                <p><span className="font-semibold">Estimated Delivery:</span> 30-45 minutes</p>
-              </div>
-            </div>
-
-            <div className="space-x-4">
-              <Link
-                href={`/orders/${orderId}`}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-block"
-              >
-                Track Order
-              </Link>
-              <Link
-                href="/menu"
-                className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded-lg font-semibold transition-colors inline-block"
-              >
-                Order More Food
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   if (items.length === 0) {
     return (
@@ -377,10 +274,10 @@ export default function Checkout() {
                 {loading ? (
                   <div className="flex items-center justify-center">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-2"></div>
-                    Placing Order...
+                    Creating Order...
                   </div>
                 ) : (
-                  `Place Order - $${(total + 2.99 + total * 0.08).toFixed(2)}`
+                  `Proceed to Payment - ₹${(total + 2.99 + total * 0.08).toFixed(2)}`
                 )}
               </button>
 
