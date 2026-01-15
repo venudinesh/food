@@ -77,7 +77,7 @@ export default function Menu() {
       ) || 'american';
 
       const response = await apiClient.get(
-        `/api/restaurants/${restaurant.place_id.split('').reduce((a, b) => a + b.charCodeAt(0), 0) % 1000 + 1}/menu?name=${encodeURIComponent(restaurant.name)}&cuisine=${cuisineType}`
+        `/api/restaurants/${restaurant.place_id}/menu?name=${encodeURIComponent(restaurant.name)}&cuisine=${cuisineType}`
       );
 
       if (response.success) {

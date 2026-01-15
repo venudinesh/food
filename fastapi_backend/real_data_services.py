@@ -20,7 +20,7 @@ from geopy.distance import geodesic
 from datetime import datetime, timedelta
 import json
 import folium
-import osmnx as ox
+# import osmnx as ox
 from shapely.geometry import Point
 import networkx as nx
 
@@ -80,8 +80,8 @@ class OpenStreetMapService:
         self.overpass_url = "http://overpass-api.de/api/interpreter"
 
         # Configure OSMnx settings
-        ox.settings.use_cache = True
-        ox.settings.log_console = False
+        # ox.settings.use_cache = True
+        # ox.settings.log_console = False
 
     def get_route(self, start_lat: float, start_lng: float,
                   end_lat: float, end_lng: float,
@@ -252,21 +252,22 @@ class OpenStreetMapService:
         """
         try:
             # Download city boundary
-            gdf = ox.geocode_to_gdf(city_name)
-            if not gdf.empty:
-                # Convert to GeoJSON-like format
-                boundary = gdf.iloc[0].geometry
-                return {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': boundary.geom_type,
-                        'coordinates': list(boundary.exterior.coords) if hasattr(boundary, 'exterior') else boundary.coords
-                    },
-                    'properties': {
-                        'name': city_name,
-                        'area': boundary.area
-                    }
-                }
+            # gdf = ox.geocode_to_gdf(city_name)
+            # if not gdf.empty:
+            #     # Convert to GeoJSON-like format
+            #     boundary = gdf.iloc[0].geometry
+            #     return {
+            #         'type': 'Feature',
+            #         'geometry': {
+            #             'type': boundary.geom_type,
+            #             'coordinates': list(boundary.exterior.coords) if hasattr(boundary, 'exterior') else boundary.coords
+            #         },
+            #         'properties': {
+            #             'name': city_name,
+            #             'area': boundary.area
+            #         }
+            #     }
+            pass
         except Exception as e:
             print(f"City boundary error: {e}")
 

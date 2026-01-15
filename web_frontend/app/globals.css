@@ -8,13 +8,6 @@
   --secondary: #dc2626;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
@@ -29,89 +22,27 @@ body {
   scroll-behavior: smooth;
 }
 
-/* Animations */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
+/* Utility classes */
+@layer utilities {
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  .gradient-text {
+    background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
-}
 
-@keyframes slideInRight {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
+  .shadow-glow {
+    box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+
+  .shadow-glow-hover:hover {
+    box-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
+    transition: box-shadow 0.3s ease;
   }
-}
-
-@keyframes bounce-subtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes glow {
-  0%, 100% {
-    text-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
-  }
-  50% {
-    text-shadow: 0 0 20px rgba(249, 115, 22, 0.6);
-  }
-}
-
-.animate-fadeInUp {
-  animation: fadeInUp 0.6s ease-out;
-}
-
-.animate-slideInRight {
-  animation: slideInRight 0.5s ease-out;
-}
-
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s infinite;
-}
-
-.animate-glow {
-  animation: glow 2s ease-in-out infinite;
-}
-
-/* Glass morphism effect */
-.glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Gradient text */
-.gradient-text {
-  background: linear-gradient(135deg, #f97316 0%, #dc2626 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Shadow effects */
-.shadow-glow {
-  box-shadow: 0 0 30px rgba(249, 115, 22, 0.2);
-}
-
-.shadow-glow-hover:hover {
-  box-shadow: 0 0 40px rgba(249, 115, 22, 0.4);
-  transition: box-shadow 0.3s ease;
-}
-
-/* Smooth transitions */
-* {
-  transition: color 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }

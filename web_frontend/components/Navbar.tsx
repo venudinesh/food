@@ -9,11 +9,13 @@ import { useAuth } from '@/lib/auth-context';
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
   const pathname = usePathname();
   const { itemCount } = useCart();
   const { user, isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
+    setIsHydrated(true);
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 10);
     };
@@ -70,7 +72,7 @@ export default function Navbar() {
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
-                {item.href === '/cart' && itemCount > 0 && (
+                {item.href === '/cart' && isHydrated && itemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
                     {itemCount}
                   </span>
@@ -134,7 +136,7 @@ export default function Navbar() {
                 }`}
               >
                 <span>{item.icon}</span> {item.label}
-                {item.href === '/cart' && itemCount > 0 && (
+                {item.href === '/cart' && isHydrated && itemCount > 0 && (
                   <span className="ml-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 inline-flex items-center justify-center font-bold">
                     {itemCount}
                   </span>
