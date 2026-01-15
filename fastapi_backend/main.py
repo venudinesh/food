@@ -103,10 +103,10 @@ def register():
     data = request.get_json()
 
     if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Email already registered'}), 400
+        return jsonify({'success': False, 'error': 'Email already registered'}), 400
 
     if User.query.filter_by(username=data['username']).first():
-        return jsonify({'error': 'Username already taken'}), 400
+        return jsonify({'success': False, 'error': 'Username already taken'}), 400
 
     user = User(
         username=data['username'],
@@ -120,7 +120,19 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    # Create JWT token for auto-login after registration
+    token = f"jwt_token_for_user_{user.id}"
+    return jsonify({
+        'success': True,
+        'access_token': token,
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'email': user.email,
+            'full_name': user.full_name
+        },
+        'message': 'User registered successfully'
+    }), 201
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
@@ -131,6 +143,7 @@ def login():
         # Create JWT token (simplified for demo)
         token = f"jwt_token_for_user_{user.id}"
         return jsonify({
+            'success': True,
             'access_token': token,
             'user': {
                 'id': user.id,
@@ -140,7 +153,7 @@ def login():
             }
         })
 
-    return jsonify({'error': 'Invalid credentials'}), 401
+    return jsonify({'success': False, 'error': 'Invalid credentials'}), 401
 
 @app.route('/api/auth/profile', methods=['GET'])
 @jwt_required()
