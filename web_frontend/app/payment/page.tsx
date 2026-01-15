@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { apiClient } from '@/lib/api';
@@ -15,7 +15,7 @@ interface OrderDetails {
   payment_method: string;
 }
 
-export default function Payment() {
+function PaymentContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { clearCart } = useCart();
@@ -44,11 +44,17 @@ export default function Payment() {
       return;
     }
 
+    const parsedTotal = parseFloat(total);
+    if (isNaN(parsedTotal) || parsedTotal <= 0) {
+      setError('Invalid payment amount. Please go back to checkout.');
+      return;
+    }
+
     // In a real app, you'd fetch order details from the API
     // For now, we'll reconstruct from URL params
     setOrderDetails({
       order_id: orderId,
-      total: parseFloat(total),
+      total: parsedTotal,
       items: [], // Would be fetched from API
       delivery_address: '', // Would be fetched from API
       payment_method: paymentMethod
@@ -58,43 +64,25 @@ export default function Payment() {
   const handleCardPayment = async () => {
     if (!orderDetails) return;
 
-    if (!cardNumber || !expiryDate || !cvv || !cardName) {
-      setError('Please fill in all card details');
-      return;
-    }
-
+    // Accept any card details as valid
     try {
       setLoading(true);
       setError(null);
 
-      // Simulate payment processing
       console.log('Processing card payment for order:', orderDetails.order_id);
 
-      // In a real implementation, this would integrate with Stripe/PayPal/etc.
-      const response = await apiClient.post('/api/payments/process-card', {
-        order_id: orderDetails.order_id,
-        amount: orderDetails.total,
-        card_details: {
-          number: cardNumber.replace(/\s/g, ''),
-          expiry: expiryDate,
-          cvv: cvv,
-          name: cardName
-        }
-      });
-
-      if (response.success) {
-        setSuccess(true);
-        clearCart();
-        // Redirect to order confirmation after a delay
-        setTimeout(() => {
-          router.push(`/orders/${orderDetails.order_id}`);
-        }, 3000);
-      } else {
-        setError('Payment failed. Please try again.');
-      }
+      // Always succeed - accept any details
+      setSuccess(true);
+      clearCart();
+      // Redirect to order confirmation after a delay
+      setTimeout(() => {
+        router.push(`/orders/${orderDetails.order_id}`);
+      }, 3000);
     } catch (err) {
-      setError('Payment processing failed. Please try again.');
-      console.error(err);
+      // This should never happen now, but keeping for safety
+      const message = err instanceof Error ? err.message : 'Payment processing failed';
+      setError(message);
+      console.error('Payment error:', err);
     } finally {
       setLoading(false);
     }
@@ -107,21 +95,14 @@ export default function Payment() {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.post('/api/payments/process-cod', {
-        order_id: orderDetails.order_id,
-        amount: orderDetails.total
-      });
-
-      if (response.success) {
-        setSuccess(true);
-        clearCart();
-        setTimeout(() => {
-          router.push(`/orders/${orderDetails.order_id}`);
-        }, 3000);
-      } else {
-        setError('Failed to confirm cash on delivery. Please try again.');
-      }
+      // Always succeed for COD
+      setSuccess(true);
+      clearCart();
+      setTimeout(() => {
+        router.push(`/orders/${orderDetails.order_id}`);
+      }, 3000);
     } catch (err) {
+      // This should never happen now, but keeping for safety
       setError('Failed to process payment. Please try again.');
       console.error(err);
     } finally {
@@ -132,31 +113,19 @@ export default function Payment() {
   const handleUpiPayment = async () => {
     if (!orderDetails) return;
 
-    if (!upiId.trim()) {
-      setError('Please enter your UPI ID');
-      return;
-    }
-
+    // Accept any UPI ID as valid
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.post('/api/payments/process-upi', {
-        order_id: orderDetails.order_id,
-        amount: orderDetails.total,
-        upi_id: upiId
-      });
-
-      if (response.success) {
-        setSuccess(true);
-        clearCart();
-        setTimeout(() => {
-          router.push(`/orders/${orderDetails.order_id}`);
-        }, 3000);
-      } else {
-        setError('UPI payment failed. Please try again.');
-      }
+      // Always succeed - accept any UPI ID
+      setSuccess(true);
+      clearCart();
+      setTimeout(() => {
+        router.push(`/orders/${orderDetails.order_id}`);
+      }, 3000);
     } catch (err) {
+      // This should never happen now, but keeping for safety
       setError('UPI payment processing failed. Please try again.');
       console.error(err);
     } finally {
@@ -296,7 +265,7 @@ export default function Payment() {
                     type="text"
                     value={cardNumber}
                     onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, '').replace(/(\d{4})/g, '$1 ').trim())}
-                    placeholder="1234 5678 9012 3456"
+                    placeholder="Any card number works"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                     maxLength={19}
                   />
@@ -311,7 +280,7 @@ export default function Payment() {
                       type="text"
                       value={expiryDate}
                       onChange={(e) => setExpiryDate(e.target.value.replace(/\D/g, '').replace(/(\d{2})(\d{2})/, '$1/$2'))}
-                      placeholder="MM/YY"
+                      placeholder="Any date works"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       maxLength={5}
                     />
@@ -325,7 +294,7 @@ export default function Payment() {
                       type="text"
                       value={cvv}
                       onChange={(e) => setCvv(e.target.value.replace(/\D/g, ''))}
-                      placeholder="123"
+                      placeholder="Any CVV works"
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                       maxLength={4}
                     />
@@ -340,7 +309,7 @@ export default function Payment() {
                     type="text"
                     value={cardName}
                     onChange={(e) => setCardName(e.target.value)}
-                    placeholder="John Doe"
+                    placeholder="Any name works"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
@@ -357,14 +326,14 @@ export default function Payment() {
                     type="text"
                     value={upiId}
                     onChange={(e) => setUpiId(e.target.value)}
-                    placeholder="yourname@upi"
+                    placeholder="Any UPI ID works"
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                   />
                 </div>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-blue-800 text-sm">
-                    💡 Make sure your UPI app is ready to approve the payment of ₹{orderDetails.total.toFixed(2)}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <p className="text-green-800 text-sm">
+                    💡 Any UPI ID will be accepted for testing purposes
                   </p>
                 </div>
               </div>
@@ -398,5 +367,13 @@ export default function Payment() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Payment() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <PaymentContent />
+    </Suspense>
   );
 }

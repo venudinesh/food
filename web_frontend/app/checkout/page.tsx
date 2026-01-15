@@ -36,36 +36,61 @@ export default function Checkout() {
   }, [currentLocation, deliveryAddress, isAuthenticated, router]);
 
   const handlePlaceOrder = async () => {
-    if (items.length === 0) return;
+    if (items.length === 0) {
+      setError('Please add items to your cart');
+      return;
+    }
+
+    if (!deliveryAddress.trim()) {
+      setError('Please enter a delivery address');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
 
+      // Transform cart items to match backend API format
+      const transformedItems = items.map(item => ({
+        menu_item_id: item.id,  // Backend expects menu_item_id
+        quantity: item.quantity,
+        special_instructions: item.customizations ? JSON.stringify(item.customizations) : ''
+      }));
+
+      // Get restaurant_id from first item (all items should be from same restaurant)
+      const restaurantId = items[0]?.restaurant_id || 1;
+
       const orderData = {
-        items,
-        delivery_address: deliveryAddress,
+        items: transformedItems,
+        delivery_address: deliveryAddress.trim(),
+        restaurant_id: restaurantId,
         payment_method: paymentMethod,
-        special_instructions: specialInstructions || undefined
+        special_instructions: specialInstructions?.trim() || undefined
       };
 
       // First, create the order
       const response = await apiClient.post('/api/orders', orderData);
 
-      if (!response.success) {
-        setError('Failed to create order. Please try again.');
+      if (!response.success && !response.order_id) {
+        setError(response.error || 'Failed to create order. Please try again.');
         return;
       }
 
-      const createdOrderId = response.order_id;
+      const createdOrderId = response.order_id || response.id;
       const finalTotal = total + 2.99 + total * 0.08; // Include delivery fee and tax
 
+      if (!createdOrderId) {
+        setError('Unable to create order - no order ID received');
+        return;
+      }
+
       // Redirect to payment page with order details
-      router.push(`/payment?order_id=${createdOrderId}&total=${finalTotal}&payment_method=${paymentMethod}`);
+      router.push(`/payment?order_id=${createdOrderId}&total=${finalTotal.toFixed(2)}&payment_method=${paymentMethod}`);
 
     } catch (err) {
-      setError('Failed to create order. Please check your connection and try again.');
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to create order. Please try again.';
+      console.error('Order creation error:', err);
+      setError(message);
     } finally {
       setLoading(false);
     }

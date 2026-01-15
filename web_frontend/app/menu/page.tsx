@@ -6,6 +6,7 @@ import { useLocation } from '@/lib/location-context';
 import { useCart } from '@/lib/cart-context';
 
 interface Restaurant {
+  id: number;
   place_id: string;
   name: string;
   address: string;
@@ -40,22 +41,36 @@ export default function Menu() {
   const { addItem } = useCart();
 
   const fetchRestaurants = useCallback(async () => {
-    if (!currentLocation) return;
+    if (!currentLocation) {
+      console.log('No current location available, skipping restaurant fetch');
+      return;
+    }
+
+    console.log('Fetching restaurants for location:', currentLocation);
 
     try {
       setLoading(true);
+      setError(null);
       const response = await apiClient.get(
         `/api/restaurants/nearby?lat=${currentLocation.latitude}&lng=${currentLocation.longitude}&radius=1000`
       );
 
-      if (response.success) {
+      console.log('Restaurant API response:', response);
+
+      if (response.success && response.restaurants) {
         setRestaurants(response.restaurants);
+        setError(null);
+      } else if (response.restaurants) {
+        // Handle case where response doesn't have success flag but has restaurants
+        setRestaurants(response.restaurants);
+        setError(null);
       } else {
         setError('Failed to load restaurants');
       }
     } catch (err) {
-      setError('Failed to load restaurants. Please check your location permissions.');
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to load restaurants';
+      console.error('Error fetching restaurants:', err);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -63,32 +78,37 @@ export default function Menu() {
 
   // Fetch restaurants near user location
   useEffect(() => {
-    if (currentLocation) {
+    if (currentLocation && !locationError) {
       fetchRestaurants();
     }
-  }, [currentLocation, fetchRestaurants]);
+  }, [currentLocation, fetchRestaurants, locationError]);
 
   const fetchRestaurantMenu = async (restaurant: Restaurant) => {
     try {
       setLoading(true);
-      // Extract cuisine type from restaurant types
-      const cuisineType = restaurant.types?.find(type =>
-        ['italian', 'japanese', 'mexican', 'american', 'chinese', 'indian', 'thai', 'french'].includes(type)
-      ) || 'american';
+      setError(null);
 
+      // Use numeric restaurant ID to fetch from database with real menu item IDs
       const response = await apiClient.get(
-        `/api/restaurants/${restaurant.place_id}/menu?name=${encodeURIComponent(restaurant.name)}&cuisine=${cuisineType}`
+        `/api/restaurants/${restaurant.id}/menu`
       );
 
-      if (response.success) {
+      if (response.success && response.menu_items) {
         setSelectedRestaurant(restaurant);
         setMenuItems(response.menu_items);
+        setError(null);
+      } else if (response.menu_items) {
+        // Handle case where response doesn't have success flag but has menu items
+        setSelectedRestaurant(restaurant);
+        setMenuItems(response.menu_items);
+        setError(null);
       } else {
         setError('Failed to load menu');
       }
     } catch (err) {
-      setError('Failed to load menu');
-      console.error(err);
+      const message = err instanceof Error ? err.message : 'Failed to load menu';
+      console.error('Error fetching menu:', err);
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -100,6 +120,7 @@ export default function Menu() {
       name: item.name,
       price: item.price,
       restaurant: selectedRestaurant?.name || 'Unknown',
+      restaurant_id: selectedRestaurant?.id || 1,
       customizations: {}
     });
   };

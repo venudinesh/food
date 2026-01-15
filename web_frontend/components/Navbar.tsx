@@ -45,7 +45,7 @@ export default function Navbar() {
   };
 
   return (
-    <nav className={`sticky top-0 z-50 transition-all duration-300 ${
+    <nav className={`sticky top-0 z-50 transition-all var(--transition-base) ${
       isScrolled
         ? 'bg-gradient-to-r from-orange-600 to-red-600 shadow-2xl backdrop-blur-md'
         : 'bg-gradient-to-r from-orange-500 to-red-500 shadow-lg'
@@ -54,7 +54,7 @@ export default function Navbar() {
         <div className="flex justify-between items-center h-20">
           <Link
             href="/"
-            className="text-3xl font-bold flex items-center gap-2 hover:scale-105 transition transform duration-300 animate-glow"
+            className="text-3xl font-bold flex items-center gap-2 hover:scale-105 transition-transform var(--transition-base) shadow-glow"
           >
             🍔 <span className="hidden sm:inline">Smart Food</span>
           </Link>
@@ -64,16 +64,16 @@ export default function Navbar() {
               <Link
                 key={item.href}
                 href={item.href}
-                className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-1 transition-all duration-300 relative ${
+                className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-1 transition-all var(--transition-base) relative ${
                   isActive(item.href)
-                    ? 'bg-white text-orange-600 shadow-lg scale-105'
+                    ? 'bg-white text-orange-600 shadow-glow'
                     : 'hover:bg-white hover:bg-opacity-20 text-white hover:text-white'
                 }`}
               >
                 <span>{item.icon}</span>
                 <span>{item.label}</span>
                 {item.href === '/cart' && isHydrated && itemCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold animate-pulse-glow">
                     {itemCount}
                   </span>
                 )}
@@ -87,7 +87,7 @@ export default function Navbar() {
                   <span className="text-sm text-orange-100">Welcome, {user?.username}!</span>
                   <button
                     onClick={handleLogout}
-                    className="px-4 py-2 bg-white text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition-colors"
+                    className="btn-primary hover:shadow-glow"
                   >
                     Logout
                   </button>
@@ -96,13 +96,13 @@ export default function Navbar() {
                 <div className="flex items-center gap-2">
                   <Link
                     href="/login"
-                    className="px-4 py-2 bg-white text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition-colors"
+                    className="btn-primary hover:shadow-glow"
                   >
                     Login
                   </Link>
                   <Link
                     href="/register"
-                    className="px-4 py-2 bg-orange-700 text-white rounded-lg font-semibold hover:bg-orange-800 transition-colors"
+                    className="btn-secondary hover:shadow-glow"
                   >
                     Sign Up
                   </Link>
@@ -113,7 +113,7 @@ export default function Navbar() {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition transform duration-300"
+            className="md:hidden p-2 hover:bg-white hover:bg-opacity-20 rounded-lg transition-colors var(--transition-base)"
             aria-label="Toggle menu"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

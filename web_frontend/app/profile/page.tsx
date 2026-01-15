@@ -54,6 +54,22 @@ export default function Profile() {
   const [streamsLoading, setStreamsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [message, setMessage] = useState('');
+  
+  // Settings state
+  const [settings, setSettings] = useState({
+    phone: '',
+    address: '',
+    full_name: '',
+    notifications_enabled: true,
+    order_notifications: true,
+    promotional_emails: false,
+    sms_notifications: false,
+    dietary_preferences: [] as string[],
+    default_payment_method: 'card',
+    preferred_delivery_time: 'asap',
+    saved_addresses: [] as Array<{ id: string; label: string; address: string }>,
+  });
+  const [settingsEditing, setSettingsEditing] = useState(false);
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
@@ -206,6 +222,40 @@ export default function Profile() {
     }
   };
 
+  const handleSaveSettings = async () => {
+    setIsLoading(true);
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000';
+    
+    try {
+      const response = await fetch(`${API_URL}/api/auth/profile`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        },
+        body: JSON.stringify({
+          full_name: settings.full_name,
+          phone: settings.phone,
+          address: settings.address,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setMessage('Settings saved successfully!');
+        setTimeout(() => setMessage(''), 3000);
+      } else {
+        setMessage(data.error || 'Failed to save settings');
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      setMessage('Failed to save settings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (!isAuthenticated || !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-slate-50 flex items-center justify-center">
@@ -276,6 +326,16 @@ export default function Profile() {
                 }`}
               >
                 Live Streams
+              </button>
+              <button
+                onClick={() => setActiveTab('settings')}
+                className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === 'settings'
+                    ? 'border-orange-500 text-orange-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                ⚙️ Settings
               </button>
             </nav>
           </div>
@@ -615,6 +675,274 @@ export default function Profile() {
                         </div>
                       ))}
                     </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === 'settings' && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-semibold text-gray-900">Account Settings</h2>
+                  <button
+                    onClick={() => {
+                      if (settingsEditing) {
+                        // Save settings when clicking "Done"
+                        handleSaveSettings();
+                      }
+                      setSettingsEditing(!settingsEditing);
+                    }}
+                    className="bg-orange-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+                  >
+                    {settingsEditing ? 'Save & Done' : 'Edit Settings'}
+                  </button>
+                </div>
+
+                {/* Personal Information */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">📋 Personal Information</h3>
+                  
+                  {settingsEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                        <input
+                          type="text"
+                          value={settings.full_name}
+                          onChange={(e) => setSettings({ ...settings, full_name: e.target.value })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="John Doe"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Phone Number</label>
+                        <input
+                          type="tel"
+                          value={settings.phone}
+                          onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="+91 9876543210"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Default Address</label>
+                        <textarea
+                          value={settings.address}
+                          onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                          placeholder="Enter your default delivery address"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Full Name</p>
+                        <p className="text-gray-900 font-medium">{settings.full_name || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Phone Number</p>
+                        <p className="text-gray-900 font-medium">{settings.phone || 'Not set'}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-600">Default Address</p>
+                        <p className="text-gray-900 font-medium">{settings.address || 'Not set'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Delivery Preferences */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🚚 Delivery Preferences</h3>
+                  
+                  {settingsEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Preferred Delivery Time</label>
+                        <select
+                          value={settings.preferred_delivery_time}
+                          onChange={(e) => setSettings({ ...settings, preferred_delivery_time: e.target.value })}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          <option value="asap">As Soon As Possible</option>
+                          <option value="schedule">Schedule Later</option>
+                          <option value="urgent">Urgent (Extra Charge)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Default Payment Method</label>
+                        <select
+                          value={settings.default_payment_method}
+                          onChange={(e) => setSettings({ ...settings, default_payment_method: e.target.value })}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          <option value="card">Credit/Debit Card</option>
+                          <option value="upi">UPI</option>
+                          <option value="cod">Cash on Delivery</option>
+                          <option value="wallet">Digital Wallet</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-3">Dietary Preferences</label>
+                        <div className="space-y-2">
+                          {['Vegetarian', 'Vegan', 'Gluten-Free', 'Halal', 'Kosher', 'No Dairy'].map((pref) => (
+                            <label key={pref} className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={settings.dietary_preferences.includes(pref)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setSettings({
+                                      ...settings,
+                                      dietary_preferences: [...settings.dietary_preferences, pref]
+                                    });
+                                  } else {
+                                    setSettings({
+                                      ...settings,
+                                      dietary_preferences: settings.dietary_preferences.filter(p => p !== pref)
+                                    });
+                                  }
+                                }}
+                                className="rounded border-gray-300 text-orange-600"
+                              />
+                              <span className="ml-2 text-gray-700">{pref}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-gray-600">Preferred Delivery Time</p>
+                        <p className="text-gray-900 font-medium capitalize">{settings.preferred_delivery_time.replace(/_/g, ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Default Payment Method</p>
+                        <p className="text-gray-900 font-medium capitalize">{settings.default_payment_method}</p>
+                      </div>
+                      <div className="md:col-span-2">
+                        <p className="text-sm text-gray-600">Dietary Preferences</p>
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {settings.dietary_preferences.length > 0 ? (
+                            settings.dietary_preferences.map((pref) => (
+                              <span key={pref} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                                {pref}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-gray-500">None selected</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notifications */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🔔 Notifications</h3>
+                  
+                  {settingsEditing ? (
+                    <div className="space-y-3">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={settings.notifications_enabled}
+                          onChange={(e) => setSettings({ ...settings, notifications_enabled: e.target.checked })}
+                          className="rounded border-gray-300 text-orange-600"
+                        />
+                        <span className="ml-2 text-gray-700">Enable all notifications</span>
+                      </label>
+                      <label className="flex items-center opacity-60">
+                        <input
+                          type="checkbox"
+                          checked={settings.order_notifications}
+                          disabled={!settings.notifications_enabled}
+                          onChange={(e) => setSettings({ ...settings, order_notifications: e.target.checked })}
+                          className="rounded border-gray-300 text-orange-600"
+                        />
+                        <span className="ml-2 text-gray-700">Order status updates</span>
+                      </label>
+                      <label className="flex items-center opacity-60">
+                        <input
+                          type="checkbox"
+                          checked={settings.promotional_emails}
+                          disabled={!settings.notifications_enabled}
+                          onChange={(e) => setSettings({ ...settings, promotional_emails: e.target.checked })}
+                          className="rounded border-gray-300 text-orange-600"
+                        />
+                        <span className="ml-2 text-gray-700">Promotional offers & deals</span>
+                      </label>
+                      <label className="flex items-center opacity-60">
+                        <input
+                          type="checkbox"
+                          checked={settings.sms_notifications}
+                          disabled={!settings.notifications_enabled}
+                          onChange={(e) => setSettings({ ...settings, sms_notifications: e.target.checked })}
+                          className="rounded border-gray-300 text-orange-600"
+                        />
+                        <span className="ml-2 text-gray-700">SMS notifications</span>
+                      </label>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-700">Notifications</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          settings.notifications_enabled ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {settings.notifications_enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
+                      <div className="space-y-1 text-sm text-gray-600">
+                        <p>✓ Order updates: {settings.order_notifications ? 'On' : 'Off'}</p>
+                        <p>✓ Promotional: {settings.promotional_emails ? 'On' : 'Off'}</p>
+                        <p>✓ SMS alerts: {settings.sms_notifications ? 'On' : 'Off'}</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Privacy & Security */}
+                <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">🔒 Privacy & Security</h3>
+                  <div className="space-y-3">
+                    <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                      <p className="font-medium text-gray-900">Change Password</p>
+                      <p className="text-sm text-gray-600">Update your account password</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                      <p className="font-medium text-gray-900">Two-Factor Authentication</p>
+                      <p className="text-sm text-gray-600">Secure your account with 2FA</p>
+                    </button>
+                    <button className="w-full text-left px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition">
+                      <p className="font-medium text-gray-900">Login Activity</p>
+                      <p className="text-sm text-gray-600">View your recent login history</p>
+                    </button>
+                  </div>
+                </div>
+
+                {settingsEditing && (
+                  <div className="flex space-x-4">
+                    <button
+                      onClick={() => {
+                        setSettingsEditing(false);
+                        setMessage('Settings saved successfully!');
+                        setTimeout(() => setMessage(''), 3000);
+                      }}
+                      className="bg-orange-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-orange-600 transition-colors"
+                    >
+                      Save Settings
+                    </button>
+                    <button
+                      onClick={() => setSettingsEditing(false)}
+                      className="bg-gray-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 )}
               </div>

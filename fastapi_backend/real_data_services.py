@@ -311,9 +311,71 @@ class RestaurantService:
 
     def search_restaurants_nearby(self, latitude: float, longitude: float, radius: int = 5000) -> List[Dict]:
         """
-        Search for restaurants near a location using OpenStreetMap data and real data for Visakhapatnam
+        Search for restaurants near a location using database and OpenStreetMap data
         """
-        # Real restaurants in Visakhapatnam (door delivery available)
+        # Try to fetch from database first
+        try:
+            from models import Restaurant, db
+            from geopy.distance import geodesic
+            
+            # Get all restaurants from database
+            all_restaurants = Restaurant.query.all()
+            
+            if all_restaurants:
+                # Filter by distance
+                nearby = []
+                for restaurant in all_restaurants:
+                    if restaurant.latitude and restaurant.longitude:
+                        distance_km = geodesic(
+                            (latitude, longitude),
+                            (restaurant.latitude, restaurant.longitude)
+                        ).kilometers
+                        
+                        if distance_km * 1000 <= radius:  # radius is in meters
+                            # Build menu items list
+                            menu_items = []
+                            for item in restaurant.menu_items:
+                                menu_items.append({
+                                    'id': item.id,
+                                    'name': item.name,
+                                    'description': item.description,
+                                    'price': float(item.price),
+                                    'category': item.category,
+                                    'preparation_time': item.preparation_time,
+                                    'is_vegetarian': item.is_vegetarian,
+                                    'is_vegan': item.is_vegan,
+                                    'is_gluten_free': item.is_gluten_free,
+                                    'spiciness_level': item.spiciness_level,
+                                })
+                            
+                            nearby.append({
+                                'place_id': restaurant.place_id,
+                                'id': restaurant.id,
+                                'name': restaurant.name,
+                                'address': restaurant.address,
+                                'phone': restaurant.phone,
+                                'website': restaurant.website,
+                                'location': {
+                                    'lat': restaurant.latitude,
+                                    'lng': restaurant.longitude
+                                },
+                                'rating': restaurant.rating or 4.0,
+                                'price_level': restaurant.price_level or 2,
+                                'cuisine_type': restaurant.cuisine_type,
+                                'is_open': restaurant.is_open,
+                                'delivery_available': restaurant.delivery_available,
+                                'estimated_delivery_time': restaurant.estimated_delivery_time,
+                                'delivery_fee': restaurant.delivery_fee,
+                                'minimum_order': restaurant.minimum_order,
+                                'menu': menu_items,
+                            })
+                
+                if nearby:
+                    return sorted(nearby, key=lambda x: x['rating'], reverse=True)
+        except Exception as e:
+            print(f"Database error: {e}")
+        
+        # Fallback to real restaurants in Visakhapatnam if database empty
         visakhapatnam_restaurants = [
             {
                 'place_id': 'real_daspalla',
@@ -512,6 +574,10 @@ class RestaurantService:
             }
             formatted_restaurants.append(restaurant_data)
 
+        # Return fallback if in Visakhapatnam area
+        if 17.5 <= latitude <= 17.8 and 83.0 <= longitude <= 83.4:
+            return visakhapatnam_restaurants
+        
         return formatted_restaurants
 
     def get_restaurant_details(self, place_id: str) -> Dict:
