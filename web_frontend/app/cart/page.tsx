@@ -90,37 +90,12 @@ export default function Cart() {
                     <span className="bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">${total.toFixed(2)}</span>
                   </div>
                 </div>
-                <button 
-                  onClick={async () => {
-                    setLoading(true);
-                    try {
-                      // Convert cart items to order format
-                      const orderData = {
-                        total_amount: total,
-                        delivery_address: "Default Address", // In a real app, get from user profile
-                        payment_method: "Cash on Delivery", // In a real app, get from payment form
-                        items: items.map(item => ({
-                          food_item_id: item.id,
-                          quantity: item.quantity,
-                          price: item.price
-                        }))
-                      };
-                      
-                      await apiClient.post('/api/orders', orderData);
-                      clearCart();
-                      alert('Order placed successfully!');
-                    } catch (err) {
-                      console.error('Failed to place order:', err);
-                      alert('Failed to place order. Please try again.');
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 rounded-xl font-bold hover:shadow-lg transition transform hover:scale-105 mb-4 disabled:opacity-50"
+                <Link
+                  href="/checkout"
+                  className="block w-full bg-gradient-to-r from-orange-600 to-red-600 text-white py-4 rounded-xl font-bold hover:shadow-lg transition transform hover:scale-105 mb-4 text-center"
                 >
-                  {loading ? 'Placing Order...' : '✓ Checkout'}
-                </button>
+                  ✓ Proceed to Checkout
+                </Link>
                 <Link href="/menu" className="block w-full text-center text-orange-600 hover:text-orange-700 font-semibold py-3 rounded-xl hover:bg-orange-50 transition">
                   Continue shopping
                 </Link>

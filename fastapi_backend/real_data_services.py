@@ -22,7 +22,7 @@ import json
 import folium
 # import osmnx as ox
 from shapely.geometry import Point
-import networkx as nx
+# import networkx as nx
 
 class LocationService:
     """Handle user location services"""

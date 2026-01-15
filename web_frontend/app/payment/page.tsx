@@ -34,12 +34,6 @@ export default function Payment() {
   const [upiId, setUpiId] = useState('');
 
   useEffect(() => {
-    // Redirect to login if not authenticated
-    if (!isAuthenticated) {
-      router.push('/login?redirect=/payment');
-      return;
-    }
-
     // Get order details from URL parameters
     const orderId = searchParams.get('order_id');
     const total = searchParams.get('total');

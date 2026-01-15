@@ -700,8 +700,9 @@ def create_order():
 
         return jsonify({
             'success': True,
+            'order_id': order_data['id'],
             'order': order_data,
-            'message': 'Order placed successfully!'
+            'message': 'Order created successfully!'
         }), 201
 
     except Exception as e:
